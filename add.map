@@ -1,0 +1,10 @@
+{
+  "version": 3,
+  "file": "add.js",
+  "sourceRoot": "",
+  "sources": [
+    "add.coffee"
+  ],
+  "names": [],
+  "mappings": ";AAAA;AAAA,MAAA,GAAA;;AAAA,EAAA,GAAA,GAAK,SAAC,IAAD,EAAM,IAAN,GAAA;WACH,IAAA,GAAO,KADJ;EAAA,CAAL,CAAA;;AAAA,EAEA,OAAO,CAAC,GAAR,GAAa,GAFb,CAAA;AAAA"
+}

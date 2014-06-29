@@ -1,0 +1,10 @@
+{
+  "version": 3,
+  "file": "database-creation.js",
+  "sourceRoot": "",
+  "sources": [
+    "database-creation.coffee"
+  ],
+  "names": [],
+  "mappings": ";AAAA;AAAA,EAAA,IAAA,CAAK,2BAAL,EAAkC,SAAC,MAAD,GAAA;AAChC,QAAA,QAAA;AAAA,IAAA,OAAO,CAAC,GAAR,CAAY,UAAZ,CAAA,CAAA;AAAA,IACA,EAAA,GAAQ,IAAA,OAAA,CAAQ,OAAR,CADR,CAAA;AAAA,IAEA,IAAA,GAAU,IAAA,SAAA,CAAU,IAAV,EAAe,IAAf,EAAoB,EAApB,CAFV,CAAA;WAGA,KAAA,CAAM,IAAN,EAAW,eAAX,EAAqB,4BAArB,EAJgC;EAAA,CAAlC,CAAA,CAAA;AAAA"
+}

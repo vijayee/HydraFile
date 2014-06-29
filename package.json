@@ -1,0 +1,10 @@
+{
+  "name": "application-name",
+  "version": "0.0.1",
+  "dependencies": {
+    "lodash": "^2.4.1",
+    "mime": "^1.2.11",
+    "pouchdb": "^2.2.3",
+    "qunit": "^0.6.4"
+  }
+}
