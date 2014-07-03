@@ -1,5 +1,5 @@
 qunit=require('qunit')
-HydraFile= require('./HydraFile.js')
+HydraFile= require('./HydraFile.js').HydraFile
 ###
 qunit.setup
   log:
@@ -23,5 +23,8 @@ PouchDB= require('pouchdb')
 
 db= new PouchDB('files')
 
-hydraFile= new HydraFile.HydraFile('./tests/test-files/xhydra.png',null ,db)
-console.log(hydraFile.retrieveManifest())
+hydraFile= new HydraFile('./tests/test-files/xhydra.png',db)
+hydraFile.on 'stored',(manifest) ->
+  console.log("storage complete")
+hydraFile.retrieveManifest()
+#hydraFile.createFileFromDB()

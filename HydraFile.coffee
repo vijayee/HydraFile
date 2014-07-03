@@ -3,33 +3,45 @@ fs= require('fs')
 EventEmitter = require("events").EventEmitter
 path= require('path')
 mime = require('mime')
-class HydraFile
+class HydraFile extends EventEmitter
   chunkSize:1000
   blockSize: 16
   file: null
   constructor:(file,db, options) ->
-    _.bindAll(@,'receivedFromDb')
+    super
+    _.bindAll(@,'receivedFromDb','incrementStoredChunks')
     throw 'invalid file path' if 'string' is not typeof file
-
-    @file =file
+    @stored=0
     @db= db
     stat=fs.statSync(file)
-    @manifest={name: path.basename(file), size: stat.size,  lastModifiedDate:stat.mtime, type: mime.lookup(file)}
+    @file =fs.readFileSync(file)
+    @manifest={name: path.basename(file), size: stat.size,  lastModifiedDate:stat.mtime, type: mime.lookup(file), content:[]}
   retrieveManifest:->
     n=0
     b=0
-    for i in [0..@file.byteLength] by @chunkSize
+    @manifest.chunks= Math.floor(@file.length/@chunkSize)
+    @manifest.chunks++ if @file.length % @chunkSize != 0
+    for i in [0..@file.length] by @chunkSize
       chunk=
         id: n
         block: b
         start: i
         end: i + @chunkSize
         key:String(@manifest.name + '-' + @manifest.lastModifiedDate + '-block-' + b + '-' + 'chunk-' + n++)
-      db.put {_id: chunk.key, buffer: file.slice(i, i + @chunkSize)}, (err)->
-        console.error('Failed to store chunk!', err) if err
-      @manifest.content.blocks= b+1
+      @manifest.content.push(chunk)
+      @db.put {_id: chunk.key, buffer: @file.slice(i, i + @chunkSize)}, @incrementStoredChunks
+      @manifest.blocks= b+1
       b++ if n % @blockSize == 0
-    @manifest
+  incrementStoredChunks:(err)->
+    if err
+      if err.status == 409
+        @stored++
+      else
+        @emit('error', err)
+    else
+      @stored++
+    @emit('stored', @manifest) if @stored == @manifest.chunks
+
   createFileFromDB:->
     for chunk in @manifest.content
       db.get chunk.key, @receivedFromDb

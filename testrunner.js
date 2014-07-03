@@ -4,7 +4,7 @@
 
   qunit = require('qunit');
 
-  HydraFile = require('./HydraFile.js');
+  HydraFile = require('./HydraFile.js').HydraFile;
 
 
   /*
@@ -30,9 +30,13 @@
 
   db = new PouchDB('files');
 
-  hydraFile = new HydraFile.HydraFile('./tests/test-files/xhydra.png', null, db);
+  hydraFile = new HydraFile('./tests/test-files/xhydra.png', db);
 
-  console.log(hydraFile.retrieveManifest());
+  hydraFile.on('stored', function(manifest) {
+    return console.log("storage complete");
+  });
+
+  hydraFile.retrieveManifest();
 
 }).call(this);
 
