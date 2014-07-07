@@ -26,11 +26,12 @@
     function HydraFile(file, db, options) {
       var stat;
       HydraFile.__super__.constructor.apply(this, arguments);
-      _.bindAll(this, 'receivedFromDb', 'incrementStoredChunks');
+      _.bindAll(this, 'retreivedFromDb', 'incrementStoredChunks', 'chunkRetrieved', 'blockRetreived');
       if ('string' === !typeof file) {
         throw 'invalid file path';
       }
       this.stored = 0;
+      this.retrieved = 0;
       this.db = db;
       stat = fs.statSync(file);
       this.file = fs.readFileSync(file);
@@ -47,6 +48,7 @@
       var b, chunk, i, n, _i, _ref, _ref1, _results;
       n = 0;
       b = 0;
+      this.keyfix = String(this.manifest.name + '-' + this.manifest.lastModifiedDate);
       this.manifest.chunks = Math.floor(this.file.length / this.chunkSize);
       if (this.file.length % this.chunkSize !== 0) {
         this.manifest.chunks++;
@@ -58,7 +60,7 @@
           block: b,
           start: i,
           end: i + this.chunkSize,
-          key: String(this.manifest.name + '-' + this.manifest.lastModifiedDate + '-block-' + b + '-' + 'chunk-' + n++)
+          key: String(this.keyfix + '-block-' + b + '-' + 'chunk-' + n++)
         };
         this.manifest.content.push(chunk);
         this.db.put({
@@ -92,11 +94,12 @@
 
     HydraFile.prototype.createFileFromDB = function() {
       var chunk, _i, _len, _ref, _results;
+      this.file = [];
       _ref = this.manifest.content;
       _results = [];
       for (_i = 0, _len = _ref.length; _i < _len; _i++) {
         chunk = _ref[_i];
-        _results.push(db.get(chunk.key, this.receivedFromDb));
+        _results.push(this.db.get(chunk.key, this.retreivedFromDb));
       }
       return _results;
     };
@@ -114,31 +117,77 @@
           end: manifestBlock[manifestBlock.length - 1].key
         };
         that = this;
-        _results.push(db.createReadStream(options).on('data', function(data) {
-          return that.receivedFromDb(null, data.value, data.key);
+        _results.push(this.db.createReadStream(options).on('data', function(data) {
+          return that.retreivedFromDb(null, data.value, data.key);
         }));
       }
       return _results;
     };
 
-    HydraFile.prototype.receivedFromDb = function(err, value) {
+    HydraFile.prototype.retreivedFromDb = function(err, value) {
       if (this.file == null) {
         this.file = [];
-        return this.file.push(value.buffer);
+        this.file.push(value.buffer);
       } else {
-        return this.file.push(value.buffer);
+        this.file.push(value.buffer);
+      }
+      if (this.file.length >= this.manifest.content.length) {
+        return this.emit('created', new Buffer(this.file));
       }
     };
 
+    HydraFile.prototype.chunkRetrieved = function(err, chunk) {
+      if (err != null) {
+        console.err(err);
+      }
+      if (chunk != null) {
+        return this.emit('chunk', chunk);
+      }
+    };
+
+    HydraFile.prototype.retreiveChunk = function(id) {
+      var key, keys;
+      keys = _.pluck(this.manifest.content, 'key');
+      key = _.filter(keys, function(key) {
+        var regex;
+        regex = new RegExp('-chunk-' + id + '$');
+        return regex.test(String(key));
+      })[0];
+      return this.db.get(key, this.chunkRetrieved);
+    };
+
+    HydraFile.prototype.blockRetreived = function(err, block) {
+      if (err != null) {
+        console.err(err);
+      }
+      if (block != null) {
+        return this.emit('block', block);
+      }
+    };
+
+    HydraFile.prototype.retreiveBlock = function(id) {
+      var blocks, keys, options;
+      keys = _.pluck(this.manifest.content, 'key');
+      blocks = _.filter(keys, function(key) {
+        var regex;
+        regex = new RegExp('-block-' + id + '-chunk-');
+        return regex.test(String(key));
+      });
+      options = {
+        keys: blocks
+      };
+      return this.db.allDocs(options, this.blockRetreived);
+    };
+
     HydraFile.prototype.getFile = function() {
-      return new Blob(this.file);
+      return new Buffer(this.file);
     };
 
     return HydraFile;
 
   })(EventEmitter);
 
-  exports.HydraFile = HydraFile;
+  module.exports.HydraFile = HydraFile;
 
 }).call(this);
 

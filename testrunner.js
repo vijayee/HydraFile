@@ -33,7 +33,20 @@
   hydraFile = new HydraFile('./tests/test-files/xhydra.png', db);
 
   hydraFile.on('stored', function(manifest) {
-    return console.log("storage complete");
+    console.log("storage complete");
+    return hydraFile.retreiveBlock(1);
+  });
+
+  hydraFile.on('created', function(file) {
+    return console.log(file);
+  });
+
+  hydraFile.on('chunk', function(file) {
+    return console.log(file);
+  });
+
+  hydraFile.on('block', function(file) {
+    return console.log(file);
   });
 
   hydraFile.retrieveManifest();

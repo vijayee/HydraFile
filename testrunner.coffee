@@ -26,5 +26,12 @@ db= new PouchDB('files')
 hydraFile= new HydraFile('./tests/test-files/xhydra.png',db)
 hydraFile.on 'stored',(manifest) ->
   console.log("storage complete")
+  hydraFile.retreiveBlock(1)
+hydraFile.on 'created',(file) ->
+  console.log(file)
+hydraFile.on 'chunk',(file) ->
+  console.log(file)
+hydraFile.on 'block',(file) ->
+  console.log(file)
 hydraFile.retrieveManifest()
-#hydraFile.createFileFromDB()
+
